@@ -24,7 +24,7 @@ To publish an event you simply call: \
 
 The bus will then invoke all methods with the same string you provided with the given data. 
 
-To unsubscribe an method from an event you call: \ 
+To unsubscribe an method from an event you call: <br>
 `Bus.GetInstance().Unsubscribe("CallName", Delegate method);`
 
 ## Tips
