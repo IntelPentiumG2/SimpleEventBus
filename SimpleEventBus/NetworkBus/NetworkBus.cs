@@ -6,6 +6,6 @@ namespace SimpleEventBus.NetworkBus
 {
     internal class NetworkBus
     {
-        
+        //TODO: Complete rewrite of the NetworkBus
     }
 }
