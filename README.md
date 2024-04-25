@@ -4,6 +4,13 @@ Download the project and build it, then include the dll in your project.
 ## Usage
 First you need to include the usaging statement: \
 `using SimpleEventBus.Bus;` \
+Secondly you create your Bus object:
+```
+Bus bus = Bus.GetInstance(bool? autoSearch, BindingFlags? flags);
+```
+- `bool? autoSearch` enables/disables the automatic search for the Subscribe attribute on creation.
+- `BindingFlags? flags` sets what methods the autosearch should look for. All by default, including private! 
+
 Then you have two options:
 - either mark your methods with the SubscribeAttribute like so: 
 ```
