@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.Collections.Concurrent;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace SimpleEventBus.Bus
@@ -14,8 +15,8 @@ namespace SimpleEventBus.Bus
         /// A dictionary of event names to a list of handlers.
         /// </summary>
         protected readonly Dictionary<string, List<Delegate>> _eventHandlers = [];
-
-        private static Bus? _instance;
+        private static Lazy<Bus>? _instance;
+        private readonly object @lock = new();
 
         /// <summary>
         /// Returns the instance of the bus.
@@ -26,7 +27,9 @@ namespace SimpleEventBus.Bus
         /// <returns> Returns the instance of the Bus </returns>
         public static Bus GetInstance(bool autoSearch = true, BindingFlags? flags = null)
         {
-            return _instance ??= new Bus(autoSearch, flags);
+            _instance ??= new Lazy<Bus>(() => new Bus(autoSearch, flags));
+
+            return _instance.Value;
         }
 
         /// <summary>
@@ -88,13 +91,16 @@ namespace SimpleEventBus.Bus
         /// <param name="handler">The delegate to invoke on event publishing</param>
         public void Subscribe(string eventName, Delegate handler)
         {
-            if (!_eventHandlers.TryGetValue(eventName, out List<Delegate>? value))
+            lock (@lock)
             {
-                value = [];
-                _eventHandlers.Add(eventName, value);
-            }
+                if (!_eventHandlers.TryGetValue(eventName, out List<Delegate>? value))
+                {
+                    value = [];
+                    _eventHandlers.Add(eventName, value);
+                }
 
-            value.Add(handler);
+                value.Add(handler); 
+            }
         }
 
         /// <summary>
@@ -104,12 +110,15 @@ namespace SimpleEventBus.Bus
         /// <param name="handler">The delegate to remove from the given event</param>
         public void Unsubscribe(string eventName, Delegate handler)
         {
-            if (!_eventHandlers.TryGetValue(eventName, out List<Delegate>? handlers))
+            lock (@lock)
             {
-                return;
-            }
+                if (!_eventHandlers.TryGetValue(eventName, out List<Delegate>? handlers))
+                {
+                    return;
+                }
 
-            handlers?.Remove(handler);
+                handlers?.Remove(handler); 
+            }
         }
 
         /// <summary>
@@ -119,9 +128,13 @@ namespace SimpleEventBus.Bus
         /// <param name="data">The data du publish on the event</param>
         public virtual void Publish(string eventName, object[] data)
         {
-            if (!_eventHandlers.TryGetValue(eventName, out List<Delegate>? handlers))
+            List<Delegate>? handlers;
+            lock (@lock)
             {
-                return;
+                if (!_eventHandlers.TryGetValue(eventName, out handlers))
+                {
+                    return;
+                } 
             }
 
             foreach (var handler in handlers)
