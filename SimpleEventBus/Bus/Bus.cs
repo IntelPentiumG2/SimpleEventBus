@@ -20,7 +20,8 @@ namespace SimpleEventBus.Bus
 
         /// <summary>
         /// Returns the instance of the bus.
-        /// Searches for all methods with the Subscribe attribute by default.
+        /// Searches for all methods, except instance ones, with the Subscribe attribute by default.
+        /// Uses reflection for the auto search. Can be very slow.
         /// </summary>
         /// <param name="autoSearch"> Auto search for Methods with the Subscribe Attribute </param>
         /// <param name="flags">Flags to use when searching for methods</param>
@@ -35,6 +36,7 @@ namespace SimpleEventBus.Bus
         /// <summary>
         /// Creates a new instance of the bus.
         /// Searches for all methods, except instance ones, with the Subscribe attribute by default.
+        /// Uses reflection for the auto search. Can be very slow.
         /// </summary>
         /// <param name="autoSearch">If the Bus should search all Assemblies for subscriptions</param>
         /// <param name="flags">Flags to use when searching for methods</param>
@@ -129,7 +131,7 @@ namespace SimpleEventBus.Bus
         /// Publishes an event with the given data.
         /// </summary>
         /// <param name="eventName">The event name to publish the event to</param>
-        /// <param name="data">The data du publish on the event</param>
+        /// <param name="data">The data to publish on the event</param>
         public virtual void Publish(string eventName, object[] data)
         {
             List<Delegate>? handlers;
