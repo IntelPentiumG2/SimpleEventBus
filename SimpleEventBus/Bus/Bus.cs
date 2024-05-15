@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -34,7 +34,7 @@ namespace SimpleEventBus.Bus
 
         /// <summary>
         /// Creates a new instance of the bus.
-        /// Searches for all methods with the Subscribe attribute by default.
+        /// Searches for all methods, except instance ones, with the Subscribe attribute by default.
         /// </summary>
         /// <param name="autoSearch">If the Bus should search all Assemblies for subscriptions</param>
         /// <param name="flags">Flags to use when searching for methods</param>
@@ -43,7 +43,7 @@ namespace SimpleEventBus.Bus
             if (!autoSearch)
                 return;
 
-            flags ??= BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public;
+            flags ??= BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public;
 
             var methods = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(x => x.GetTypes())
@@ -66,6 +66,7 @@ namespace SimpleEventBus.Bus
                     Type delegateType = Expression.GetActionType(parameterTypes);
                     // Create the delegate for the method
 
+                    // If the method is not static, break out of the loop
                     if (method.IsStatic)
                     {
                         Delegate methodDelegate = Delegate.CreateDelegate(delegateType, method);
@@ -73,10 +74,12 @@ namespace SimpleEventBus.Bus
                     }
                     else
                     {
+                        Debug.WriteLine($"Method {method.Name} is not static. Instance methods wont have access to the instance and its data.");
+
                         // If the method is not static, we need to create an instance of the class to call the method
                         object instance = Activator.CreateInstance(method.DeclaringType!)!;
 
-                        // Create a delegate that calls the method on the instance
+                        // Create a delegate that calls the method on the created instance
                         Delegate methodDelegate = Delegate.CreateDelegate(delegateType, instance, method);
                         Subscribe(className, methodDelegate);
                     }
@@ -95,8 +98,9 @@ namespace SimpleEventBus.Bus
             {
                 if (!_eventHandlers.TryGetValue(eventName, out List<Delegate>? value))
                 {
-                    value = [];
+                    value = [handler];
                     _eventHandlers.Add(eventName, value);
+                    return;
                 }
 
                 value.Add(handler); 
