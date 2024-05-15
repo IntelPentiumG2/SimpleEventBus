@@ -9,7 +9,7 @@ Secondly you create your Bus object:
 Bus bus = Bus.GetInstance(bool? autoSearch, BindingFlags? flags);
 ```
 - `bool? autoSearch` enables/disables the automatic search for the Subscribe attribute on creation.
-- `BindingFlags? flags` sets what methods the autosearch should look for. All by default, including private! 
+- `BindingFlags? flags` sets what methods the autosearch should look for. Default: Static | NonPublic | Public
 
 Then you have two options:
 - either mark your methods with the SubscribeAttribute like so: 
@@ -25,6 +25,7 @@ private void HandleSomething(param 1, ..., param 16) {}
 ```
 
 The call name can be any string, but be careful since its cace sensitive.
+You should manually subscribe instance methods to avoid problems with expected instance data.
 
 To publish an event you simply call: \
 `Bus.GetInstance().Publish("CallName", object[] data);`
