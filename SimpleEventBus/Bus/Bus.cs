@@ -66,7 +66,7 @@ namespace SimpleEventBus.Bus
                     Type delegateType = Expression.GetActionType(parameterTypes);
                     // Create the delegate for the method
 
-                    // If the method is not static, break out of the loop
+                    // If the method is static we can create a delegate directly
                     if (method.IsStatic)
                     {
                         Delegate methodDelegate = Delegate.CreateDelegate(delegateType, method);
@@ -74,7 +74,7 @@ namespace SimpleEventBus.Bus
                     }
                     else
                     {
-                        Debug.WriteLine($"Method {method.Name} is not static. Instance methods wont have access to the instance and its data.");
+                        Debug.WriteLine($"Method {method.Name} is not static and thus wont have access to the expected instance and its data.");
 
                         // If the method is not static, we need to create an instance of the class to call the method
                         object instance = Activator.CreateInstance(method.DeclaringType!)!;
